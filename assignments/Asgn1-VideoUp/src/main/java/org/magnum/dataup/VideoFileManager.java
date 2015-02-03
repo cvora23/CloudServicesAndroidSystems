@@ -25,8 +25,18 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.log4j.Logger;
 import org.magnum.dataup.model.Video;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 /**
  * This class provides a simple implementation to store video binary
@@ -37,6 +47,10 @@ import org.magnum.dataup.model.Video;
  *
  */
 public class VideoFileManager {
+	
+	private static final AtomicLong currentId = new AtomicLong(0L);
+    private Map<Long,Video> videos = new HashMap<Long, Video>();
+	static Logger log = Logger.getLogger(VideoSvcController.class.getName());
 
 	/**
 	 * This static factory method creates and returns a 
@@ -110,7 +124,103 @@ public class VideoFileManager {
 		assert(videoData != null);
 		
 		Path target = getVideoPath(v);
+		log.info("Video is saved at :" + target.toString());
 		Files.copy(videoData, target, StandardCopyOption.REPLACE_EXISTING);
+	}
+	
+	/**
+	 * 
+	 * Generate a data url for the video with videoId
+	 * 
+	 * @param videoId
+	 * @return
+	 */
+	 private String getDataUrl(long videoId){
+         String url = getUrlBaseForLocalServer() + "/video/" + videoId + "/data";
+         return url;
+     }
+
+	 /**
+	  * Gets the base url for local server
+	  * 
+	  * @return
+	  */
+     private String getUrlBaseForLocalServer() {
+        HttpServletRequest request = 
+            ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
+        String base = 
+           "http://"+request.getServerName() 
+           + ((request.getServerPort() != 80) ? ":"+request.getServerPort() : "");
+        return base;
+     }
+	
+	/**
+	 * This method stores the video metadata into internal hashmap
+	 * It also sets a unique id and data url for the video entity
+	 * 
+	 * @param entity
+	 */
+	public Video saveVideoMetaData(Video entity){
+			
+		checkAndSetId(entity);
+		setUrl(entity,getDataUrl(entity.getId()));
+		videos.put(entity.getId(),entity);
+		return entity;
+	
+	}
+	
+	/**
+	 * 
+	 * This method sets the dataUrl for the video
+	 * 
+	 * @param entity
+	 * @param dataUrl
+	 */
+	private void setUrl(Video entity,String dataUrl){
+		
+		if(entity.getDataUrl() == null){
+			entity.setDataUrl(dataUrl);
+		}
+	}	
+	
+	/**
+	 * This method checks and sets a unique id for the posted video
+	 * @param entity
+	 */
+	private void checkAndSetId(Video entity){
+		
+	    if(entity.getId() == 0){
+            entity.setId(currentId.incrementAndGet());
+        }
+	    
+	}
+	
+	/**
+	 * Get list of all the videos
+	 * @return
+	 */
+	public Collection<Video> getVideoList(){
+		return videos.values();
+	}
+	
+	/**
+	 * Returns the video given the appropriate video id
+	 * @param id
+	 * @return
+	 */
+	public Video getVideo(long id){
+		return videos.get(id);
+	}
+	
+	/**
+	 * This method returns true if the specified Video has binary
+	 * data stored on the file system.
+	 * 
+	 * @param id
+	 * @return
+	 */
+	public boolean hasVideo(long id){
+		return videos.containsKey(id);
 	}
 	
 }

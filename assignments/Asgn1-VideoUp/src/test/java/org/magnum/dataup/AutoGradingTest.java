@@ -176,6 +176,7 @@ public class AutoGradingTest {
 		
 		try{
 			Response r = videoSvc.getData(nonExistantId);
+			System.out.println("404 ERROR !!!!!");
 			assertEquals(404, r.getStatus());
 		}catch(RetrofitError e){
 			assertEquals(404, e.getResponse().getStatus());

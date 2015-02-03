@@ -136,6 +136,8 @@ public interface VideoSvcApi {
 
 	public static final String TITLE_PARAMETER = "title";
 	
+	public static final String ID_PARAMETER = "id";
+	
 	public static final String DURATION_PARAMETER = "duration";
 
 	public static final String TOKEN_PATH = "/oauth/token";

@@ -12,10 +12,12 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.http.HttpStatus;
+import org.apache.log4j.Logger;
 import org.junit.Test;
 import org.magnum.mobilecloud.video.TestData;
 import org.magnum.mobilecloud.video.client.SecuredRestBuilder;
 import org.magnum.mobilecloud.video.client.VideoSvcApi;
+import org.magnum.mobilecloud.video.controller.VideoSvc;
 import org.magnum.mobilecloud.video.repository.Video;
 
 import retrofit.ErrorHandler;
@@ -30,6 +32,7 @@ import retrofit.client.ApacheClient;
  * @author mitchell
  */
 public class AutoGradingTest {
+	static Logger log = Logger.getLogger(VideoSvc.class.getName());
 
 	private class ErrorRecorder implements ErrorHandler {
 
@@ -172,6 +175,7 @@ public class AutoGradingTest {
 		// Get the video again
 		v = readWriteVideoSvcUser1.getVideoById(v.getId());
 
+		log.info("Like count for video: "+ v.getLikes());
 		// Make sure the like count is 1
 		assertTrue(v.getLikes() == 1);
 
@@ -360,7 +364,7 @@ public class AutoGradingTest {
 
 		for (int i = 0; i < durations.length; ++i) {
 			videos.add(TestData.randomVideo());
-			videos.get(i).setDuration(durations[0]);
+			videos.get(i).setDuration(durations[i]);
 		}
 
 		// Add all the videos to the server
